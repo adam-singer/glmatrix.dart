@@ -1,8 +1,9 @@
-class Matrix {
-  /*
-   * mat4
-   */
+/*
+* mat4
+*/
   
+class Matrix {
+
   Float32Array dest;
   
   
@@ -44,11 +45,30 @@ class Matrix {
   num get m44() => dest[15];
   
   
-  
-  Matrix([Float32Array list]) {
+  Matrix.zero() {
+    dest = new Float32Array(16);
+    
+  }
+  Matrix.identity() {
+    dest = new Float32Array.fromList([1,0,0,0,
+                                      0,1,0,0,
+                                      0,0,1,0,
+                                      0,0,0,1]);
+  }
+  Matrix.fromList(List<num> list) {
     if(list == null) dest = new Float32Array(16);
     if(list.length != 16) dest = new Float32Array(16);
-    dest = list;
+    dest = new Float32Array.fromList(list);
+  }
+  
+  Matrix(num M11, num M12, num M13, num M14,
+         num M21, num M22, num M23, num M24,
+         num M31, num M32, num M33, num M34,
+         num M41, num M42, num M43, num M44) {
+    dest = new Float32Array.fromList([M11,M12,M13,M14,
+                                      M21,M22,M23,M24,
+                                      M31,M32,M33,M34,
+                                      M41,M42,M43,M44]);
   }
   /**
    * Creates a new instance of a mat4 using the default array type
@@ -91,7 +111,8 @@ class Matrix {
    *
    * Returns result
    */
-  static Matrix Copy(Matrix mat, [Matrix result]) {
+  static Matrix Clone(Matrix mat, [Matrix result]) {
+    if(result == null) return new Matrix.fromList(mat.dest);
       result.dest[0] = mat.dest[0];
       result.dest[1] = mat.dest[1];
       result.dest[2] = mat.dest[2];
@@ -110,6 +131,7 @@ class Matrix {
       result.dest[15] = mat.dest[15];
       return result;
   }
+  Matrix clone([Matrix result]) => Matrix.Clone(this,result);
   
   /**
    * Sets a mat4 to an identity matrix
@@ -119,7 +141,7 @@ class Matrix {
    * Returns result
    */
   static Matrix Identity([Matrix result]) {
-      if(result == null) result = new Matrix();
+      if(result == null) return new Matrix.identity();
       result.dest[0] = 1;
       result.dest[1] = 0;
       result.dest[2] = 0;
@@ -139,6 +161,8 @@ class Matrix {
       return result;
   }
   
+  Matrix indentify() => Matrix.Identity(this);
+  
   /**
    * Transposes a mat4 (flips the values over the diagonal)
    *
@@ -149,7 +173,7 @@ class Matrix {
    */
   static Matrix Transpose(Matrix mat, [Matrix result]) {
       // If we are transposing ourselves we can skip a few steps but have to cache some values
-    if (result == null) result = new Matrix();
+    if (result == null) result = new Matrix.zero();
     if (mat === result) {
         var a01 = mat.dest[1], a02 = mat.dest[2], a03 = mat.dest[3],
             a12 = mat.dest[6], a13 = mat.dest[7],
@@ -188,6 +212,7 @@ class Matrix {
       result.dest[15] = mat.dest[15];
       return result;
   }
+  Matrix transpose() => Transpose(this,this);
   
   /**
    * Calculates the determinant of a mat4
@@ -196,7 +221,7 @@ class Matrix {
    *
    * @returns {number} determinant of mat
    */
-  num determinant() {
+  num get determinant() {
       // Cache the matrix values (makes for huge speed increases!)
       var a00 = dest[0], a01 = dest[1], a02 = dest[2], a03 = dest[3],
           a10 = dest[4], a11 = dest[5], a12 = dest[6], a13 = dest[7],
@@ -267,6 +292,7 @@ class Matrix {
   
       return result;
   }
+  Matrix inverse() => Matrix.Inverse(this,this);
   
   /**
    * Copies the upper 3x3 elements of a mat4 into another mat4
@@ -277,7 +303,7 @@ class Matrix {
    * Returns result is specified, a new mat4 otherwise
    */
   static Matrix ToRotationMat(Matrix mat, [Matrix result]) {
-      if(result == null) result = new Matrix();
+      if(result == null) result = new Matrix.zero();
   
       result.dest[0] = mat.dest[0];
       result.dest[1] = mat.dest[1];
@@ -374,7 +400,7 @@ class Matrix {
    * Returns result if specified, mat otherwise
    */
   static Matrix Multiply(Matrix mat, mat2, [Matrix result]) {
-      if(result == null) { result = mat; }
+      if(result == null) { result = new Matrix.zero(); }
   
       // Cache the matrix values (makes for huge speed increases!)
       var a00 = mat.dest[0], a01 = mat.dest[1], a02 = mat.dest[2], a03 = mat.dest[3],
@@ -406,6 +432,7 @@ class Matrix {
   
       return result;
   }
+  Matrix multiply([Matrix mat]) => Matrix.Multiply(this, mat, this);
   
   /**
    * Transforms a vec3 with the given matrix
@@ -488,6 +515,8 @@ class Matrix {
       result.dest[15] = a03 * x + a13 * y + a23 * z + mat.dest[15];
       return result;
   }
+  
+  Matrix translate(Vector3 vec) => Matrix.Translate(this, vec, this);
   
   /**
    * Scales a matrix by the given vector
@@ -654,6 +683,8 @@ class Matrix {
       return result;
   }
   
+  Matrix rotateX(num angle) => Matrix.RotateX(this,angle,this);
+  
   /**
    * Rotates a matrix by the given angle around the Y axis
    *
@@ -701,6 +732,8 @@ class Matrix {
       result.dest[11] = a03 * s + a23 * c;
       return result;
   }
+  
+  Matrix rotateY(num angle) => Matrix.RotateY(this,angle,this);
   
   /**
    * Rotates a matrix by the given angle around the Z axis
@@ -751,6 +784,8 @@ class Matrix {
       return result;
   }
   
+  Matrix rotateZ(num angle) => Matrix.RotateZ(this,angle,this);
+  
   /**
    * Generates a frustum matrix with the given bounds
    *
@@ -764,8 +799,8 @@ class Matrix {
    *
    * Returns result if specified, a new mat4 otherwise
    */
-  static Matrix Frustum(left, right, bottom, top, near, far, [Matrix result]) {
-      if(result == null) result = new Matrix();
+  static Matrix Frustum(num left, num right, num bottom, num top, num near, num far, [Matrix result]) {
+      if(result == null) result = new Matrix.zero();
       var rl = (right - left),
           tb = (top - bottom),
           fn = (far - near);
@@ -799,7 +834,7 @@ class Matrix {
    *
    * Returns result if specified, a new mat4 otherwise
    */
-  static Matrix Perspective(fovy, aspect, near, far, [Matrix result]) {
+  static Matrix Perspective(num fovy, num aspect, num near, num far, [Matrix result]) {
       var top = near * Math.tan(fovy * Math.PI / 360.0),
           right = top * aspect;
       return Matrix.Frustum(-right, right, -top, top, near, far, result);
@@ -818,8 +853,8 @@ class Matrix {
    *
    * Returns result if specified, a new mat4 otherwise
    */
-  static Matrix Ortho(left, right, bottom, top, near, far, [Matrix result]) {
-      if(result == null) result = new Matrix();
+  static Matrix Ortho(num left, num right, num bottom, num top, num near, num far, [Matrix result]) {
+      if(result == null) result = new Matrix.zero();
       var rl = (right - left),
           tb = (top - bottom),
           fn = (far - near);
@@ -852,19 +887,19 @@ class Matrix {
    *
    * Returns result if specified, a new mat4 otherwise
    */
-  static Matrix LookAt(eye, center, up, [Matrix result]) {
-      if(result == null) result = new Matrix();
+  static Matrix LookAt(Vector3 eye, Vector3 center, Vector3 up, [Matrix result]) {
+      if(result == null) result = new Matrix.zero();
   
       var x0, x1, x2, y0, y1, y2, z0, z1, z2, len,
-          eyex = eye[0],
-          eyey = eye[1],
-          eyez = eye[2],
-          upx = up[0],
-          upy = up[1],
-          upz = up[2],
-          centerx = center[0],
-          centery = center[1],
-          centerz = center[2];
+          eyex = eye.dest[0],
+          eyey = eye.dest[1],
+          eyez = eye.dest[2],
+          upx = up.dest[0],
+          upy = up.dest[1],
+          upz = up.dest[2],
+          centerx = center.dest[0],
+          centery = center.dest[1],
+          centerz = center.dest[2];
   
       if (eyex === centerx && eyey === centery && eyez === centerz) {
           return Matrix.Identity(result);
@@ -933,6 +968,8 @@ class Matrix {
   
       return result;
   }
+  Matrix lookAt(Vector3 eye, Vector3 center, Vector3 up)
+        => Matrix.LookAt(eye,center,up,this);
   
   /**
    * Creates a matrix from a quaternion rotation and vector translation
@@ -940,7 +977,7 @@ class Matrix {
    *
    *     static Matrix identity([Matrix result]);
    *     static Matrix translate(dest, vec);
-   *     var quatMat = new Matrix();
+   *     var quatMat = new Matrix.zero();
    *     static Quaternion toMat4( Quaternion quat, quatMat);
    *     static Matrix multiply(dest, quatMat);
    *
@@ -951,7 +988,7 @@ class Matrix {
    * Returns result if specified, a new mat4 otherwise
    */
   static Matrix FromRotationTranslation( Quaternion quat, Vector3 vec, [Matrix result]) {
-      if(result == null) result = new Matrix();
+      if(result == null) result = new Matrix.zero();
   
       // Quaternion math
       var x = quat.dest[0], y = quat.dest[1], z = quat.dest[2], w = quat.dest[3],
@@ -988,6 +1025,11 @@ class Matrix {
       
       return result;
   }
+  
+  
+  Matrix fromRotationTranslation( Quaternion quat, Vector3 vec)
+      => Matrix.FromRotationTranslation(quat, vec, this);
+  
   
   /**
    * Returns a string representation of a mat4
