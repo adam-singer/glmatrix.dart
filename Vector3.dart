@@ -1,16 +1,47 @@
 class Vector3 {
   Float32Array dest;
+
+  Vector3.fromValues(num x, num y, num z) {
+    dest = new Float32Array.fromList([x,y,z]);
+  }
   
+  Vector3.zero() {
+    dest = new Float32Array(3);
+  }
   
+  Vector3.fromSingleValues(num value) {
+    dest = new Float32Array.fromList([value,value,value]);
+  }
   
+  Vector3.fromList(List<num> list) {
+    
+    if(list == null) {
+      throw "List is Null";
+      dest = new Float32Array(3);
+      return;
+    }
+    if(list.length == 3) {
+      dest = new Float32Array.fromList(list);
+      return;
+    }
+    
+    if(list.length > 3) {
+      dest = new Float32Array.fromList(list.getRange(0, 3));
+      return;
+    }
+    if(list.length == 2) {
+      dest = new Float32Array.fromList([list[0],list[1],0]);
+      return;
+    }
+    if(list.length == 1) {
+      dest = new Float32Array.fromList([list[0],0,0]);
+      return;
+    }
+    dest = new Float32Array(3);
+  }
   
-  
-  
-  
-  Vector3([Float32Array list]) {
-    if(list == null) dest = new Float32Array(3);
-    if(list.length != 3) dest = new Float32Array(3);
-    dest = list;
+  Vector3(num x, num y, num z) {
+    dest = new Float32Array.fromList([x,y,z]);
   }
   
   
@@ -35,7 +66,7 @@ class Vector3 {
    * @returns {vec3} New vec3
    */
   /*static Vector3 create(vec) {
-      var dest =new Vector3();
+      var dest =new Vector3.zero();
 
       if (vec) {
           result.dest[0] = vec.dest[0];
@@ -48,6 +79,8 @@ class Vector3 {
       return result;
   }*/
 
+  
+  
   /**
    * Copies the values of one vec3 to another
    *
@@ -56,12 +89,16 @@ class Vector3 {
    *
    * @returns {vec3} dest
    */
-  static Vector3 Copy(Vector3 vec, [Vector3 result]) {
+  static Vector3 Clone(Vector3 vec, [Vector3 result]) {
       result.dest[0] = vec.dest[0];
       result.dest[1] = vec.dest[1];
       result.dest[2] = vec.dest[2];
 
       return result;
+  }
+  
+  Vector3 clone([Vector3 result]) {
+    return Vector3.Clone(this, result);
   }
 
   /**
@@ -86,7 +123,7 @@ class Vector3 {
       result.dest[2] = vec.dest[2] + vec2.dest[2];
       return result;
   }
-
+  Vector3 add(Vector3 vec) => Vector3.Add(this, vec, this);
   /**
    * Performs a vector subtraction
    *
@@ -109,6 +146,7 @@ class Vector3 {
       result.dest[2] = vec.dest[2] - vec2.dest[2];
       return result;
   }
+  Vector3 subtract(Vector3 vec) => Vector3.Subtract(this, vec, this);
 
   /**
    * Performs a vector multiplication
@@ -120,6 +158,7 @@ class Vector3 {
    * @returns {vec3} dest if specified, vec otherwise
    */
   static Vector3 Multiply(Vector3 vec, Vector3 vec2, [Vector3 result]) {
+    if(result == null) result = new Vector3.zero();
       if (result == null || vec === result) {
           vec.dest[0] *= vec2.dest[0];
           vec.dest[1] *= vec2.dest[1];
@@ -132,7 +171,40 @@ class Vector3 {
       result.dest[2] = vec.dest[2] * vec2.dest[2];
       return result;
   }
+  Vector3 multiply(Vector3 vec) => Multiply(this,vec,this);
 
+  /**
+   * Transforms a vec3 with the given quaternion
+   *
+   * @param {quat4} quat quat4 to transform the vector with
+   * @param {vec3} vec vec3 to transform
+   * @param {vec3} [dest] vec3 receiving operation result. If not specified result is written to vec
+   *
+   * @returns dest if specified, vec otherwise
+   */
+  static Vector3 MultiplyQuat( Vector3 vec, Quaternion quat, [Vector3 result]) {
+      if(result == null) { result = new Vector3.zero(); }
+  
+      var x = vec.dest[0], y = vec.dest[1], z = vec.dest[2],
+          qx = quat.dest[0], qy = quat.dest[1], qz = quat.dest[2], qw = quat.dest[3],
+  
+          // calculate quat * vec
+          ix = qw * x + qy * z - qz * y,
+          iy = qw * y + qz * x - qx * z,
+          iz = qw * z + qx * y - qy * x,
+          iw = -qx * x - qy * y - qz * z;
+  
+      // calculate result * inverse quat
+      result.dest[0] = ix * qw + iw * -qx + iy * -qz - iz * -qy;
+      result.dest[1] = iy * qw + iw * -qy + iz * -qx - ix * -qz;
+      result.dest[2] = iz * qw + iw * -qz + ix * -qy - iy * -qx;
+  
+      return result;
+  }
+  Vector3 multiplyQuat(Quaternion quat) => Vector3.MultiplyQuat(this,quat,this);
+  
+  
+  
   /**
    * Negates the components of a vec3
    *
@@ -142,13 +214,14 @@ class Vector3 {
    * @returns {vec3} dest if specified, vec otherwise
    */
   static Vector3 Negate(Vector3 vec, [Vector3 result]) {
-      if(result == null) result = new Vector3();
+      if(result == null) result = new Vector3.zero();
 
       result.dest[0] = -vec.dest[0];
       result.dest[1] = -vec.dest[1];
       result.dest[2] = -vec.dest[2];
       return result;
   }
+  Vector3 negate() => Vector3.Negate(this,this);
 
   /**
    * Multiplies the components of a vec3 by a scalar value
@@ -159,7 +232,7 @@ class Vector3 {
    *
    * @returns {vec3} dest if specified, vec otherwise
    */
-  static Vector3 Scale(Vector3 vec, val, [Vector3 result]) {
+  static Vector3 Scale(Vector3 vec, num val, [Vector3 result]) {
       if (result == null || vec === result) {
           vec.dest[0] *= val;
           vec.dest[1] *= val;
@@ -183,7 +256,7 @@ class Vector3 {
    * @returns {vec3} dest if specified, vec otherwise
    */
   static Vector3 Normalize(Vector3 vec, [Vector3 result]) {
-      if(result == null) result = new Vector3();
+      if(result == null) result = new Vector3.zero();
 
       var x = vec.dest[0], y = vec.dest[1], z = vec.dest[2],
           len = Math.sqrt(x * x + y * y + z * z);
@@ -217,7 +290,7 @@ class Vector3 {
    * @returns {vec3} dest if specified, vec otherwise
    */
   static Vector3 Cross(Vector3 vec, Vector3 vec2, [Vector3 result]) {
-      if(result == null) result = new Vector3();
+      if(result == null) result = new Vector3.zero();
 
       var x = vec.dest[0], y = vec.dest[1], z = vec.dest[2],
           x2 = vec2.dest[0], y2 = vec2.dest[1], z2 = vec2.dest[2];
@@ -235,10 +308,8 @@ class Vector3 {
    *
    * @returns {number} Length of vec
    */
-  num length() {
-      var x = dest[0], y = dest[1], z = dest[2];
-      return Math.sqrt(x * x + y * y + z * z);
-  }
+  num get length() => Math.sqrt(Math.pow(X,2) + Math.pow(Y,2) + Math.pow(Z,2) );
+ 
 
   /**
    * Caclulates the dot product of two vec3s
@@ -262,7 +333,7 @@ class Vector3 {
    * @returns {vec3} dest if specified, vec otherwise
    */
   static Vector3 Direction(Vector3 vec, Vector3 vec2, [Vector3 result]) {
-      if(result == null) result = new Vector3();
+      if(result == null) result = new Vector3.zero();
 
       var x = vec.dest[0] - vec2.dest[0],
           y = vec.dest[1] - vec2.dest[1],
@@ -294,7 +365,9 @@ class Vector3 {
    * @returns {vec3} dest if specified, vec otherwise
    */
   static Vector3 Lerp(Vector3 vec, Vector3 vec2, num lerpVal, [Vector3 result]) {
-      if(result == null) result = new Vector3();
+      if(result == null) result = new Vector3.zero();
+      
+      
 
       result.dest[0] = vec.dest[0] + lerpVal * (vec2.dest[0] - vec.dest[0]);
       result.dest[1] = vec.dest[1] + lerpVal * (vec2.dest[1] - vec.dest[1]);
@@ -319,6 +392,7 @@ class Vector3 {
           
       return Math.sqrt(x*x + y*y + z*z);
   }
+  double distance(Vector3 other) => Vector3.Dist(this, other);
 
   /**
    * Projects the specified vec3 from screen space into object space
@@ -335,7 +409,7 @@ class Vector3 {
   static Vector4 Unproject(Vector3 vec, Matrix view, Matrix proj, Vector4 viewport, [Vector4 result]) {
       if(result == null) result = new Vector4();
 
-      Matrix m = new Matrix();
+      Matrix m = new Matrix.zero();
       Vector4 v = new Vector4();
       
       v.dest[0] = (vec.dest[0] - viewport.dest[0]) * 2.0 / viewport.dest[2] - 1.0;
@@ -364,5 +438,7 @@ class Vector3 {
    * @returns {string} String representation of vec
    */
   String toString() => '[' + dest[0] + ', ' + dest[1] + ', ' + dest[2] + ']';
+  
+  int hashCode() => X.hashCode() + Y.hashCode() + Z.hashCode();
   
 }
