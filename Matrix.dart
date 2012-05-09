@@ -56,8 +56,14 @@ class Matrix {
                                       0,0,0,1]);
   }
   Matrix.fromList(List<num> list) {
-    if(list == null) dest = new Float32Array(16);
-    if(list.length != 16) dest = new Float32Array(16);
+    if(list == null) {
+      dest = new Float32Array(16);
+      return;
+    }
+    if(list.length != 16) {
+      dest = new Float32Array(16);
+      return;
+    }
     dest = new Float32Array.fromList(list);
   }
   
