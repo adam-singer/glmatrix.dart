@@ -10,26 +10,25 @@ class Matrix3 {
   }
 
   
-  /*
-  void set m(num value) {dest[0] = value;}
-  num get m() => dest[0];
-  void set m(num value) {dest[1] = value;}
-  num get m() => dest[1];
-  void set m(num value) {dest[2] = value;}
-  num get m() => dest[2];
-  void set m(num value) {dest[3] = value;}
-  num get m() => dest[3];
-  void set m(num value) {dest[4] = value;}
-  num get m() => dest[4];
-  void set m(num value) {dest[5] = value;}
-  num get m() => dest[5];
-  void set m(num value) {dest[6] = value;}
-  num get m() => dest[6];
-  void set m(num value) {dest[7] = value;}
-  num get m() => dest[7];
-  void set m(num value) {dest[8] = value;}
-  num get m() => dest[8];
-  */
+
+  void set m11(num value) {dest[0] = value;}
+  num get m11() => dest[0];
+  void set m12(num value) {dest[1] = value;}
+  num get m12() => dest[1];
+  void set m13(num value) {dest[2] = value;}
+  num get m13() => dest[2];
+  void set m21(num value) {dest[3] = value;}
+  num get m21() => dest[3];
+  void set m22(num value) {dest[4] = value;}
+  num get m22() => dest[4];
+  void set m23(num value) {dest[5] = value;}
+  num get m23() => dest[5];
+  void set m31(num value) {dest[6] = value;}
+  num get m31() => dest[6];
+  void set m32(num value) {dest[7] = value;}
+  num get m32() => dest[7];
+  void set m33(num value) {dest[8] = value;}
+  num get m33() => dest[8];
   
   
   
@@ -152,7 +151,7 @@ Matrix3 Transpose(Matrix3 mat, [Matrix3 result]) {
  * @returns {mat4} dest if specified, a new mat4 otherwise
  */
 Matrix ToMat4(Matrix3 mat, [Matrix result]) {
-    if(result == null) { result = new Matrix(); }
+    if(result == null) { result = new Matrix.zero(); }
 
     result.dest[15] = 1;
     result.dest[14] = 0;
