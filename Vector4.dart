@@ -2,8 +2,14 @@ class Vector4 {
   Float32Array dest;
   
   Vector4([Float32Array list]) {
-    if(list == null) dest = new Float32Array(4);
-    if(list.length != 4) dest = new Float32Array(4);
+    if(list == null){
+      dest = new Float32Array(4);
+      return;
+    }
+    if(list.length != 4){
+      dest = new Float32Array(4);
+      return;
+    }
     dest = list;
   }
   
