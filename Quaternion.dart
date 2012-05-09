@@ -16,10 +16,26 @@ class Quaternion {
   int get W() => dest[3];
   void set W(num val) { dest[3] = val;}
   
-  Quaternion([Float32Array list]) {
-    if(list == null) dest = new Float32Array(4);
-    if(list.length != 4) dest = new Float32Array(4);
-    dest = list;
+  
+  Quaternion.zero() {
+    dest = new Float32Array(4);
+  }
+  Quaternion.fromList(List<num> list) {
+    if(list == null) {
+      throw "List is empty";
+      dest = new Float32Array(4);
+      return;
+    }
+    if(list.length == 4) {
+      dest = new Float32Array.fromList(list);
+      return;
+    }
+    throw "List has to much or to less values";
+    dest = new Float32Array(4);
+  }
+  
+  Quaternion(num x, num y, num z, num w) {
+    dest = new Float32Array.fromList([x,y,z,w]);
   }
   
   /**
@@ -52,7 +68,8 @@ class Quaternion {
    *
    * @returns {quat4} dest
    */
-  static Quaternion Copy( Quaternion quat, [Quaternion result]) {
+  static Quaternion Clone( Quaternion quat, [Quaternion result]) {
+    if(result == null) result = new Quaternion.zero();
       result.dest[0] = quat.dest[0];
       result.dest[1] = quat.dest[1];
       result.dest[2] = quat.dest[2];
@@ -60,6 +77,8 @@ class Quaternion {
   
       return result;
   }
+  
+  Quaternion clone([Quaternion result]) => Quaternion.Clone(this,result);
   
   /**
    * Calculates the W component of a quat4 from the X, Y, and Z components.
@@ -74,7 +93,7 @@ class Quaternion {
   static Quaternion CalculateW( Quaternion quat, [Quaternion result]) {
       var x = quat.dest[0], y = quat.dest[1], z = quat.dest[2];
   
-      if(result == null) result = new Quaternion();
+      if(result == null) result = new Quaternion.zero();
       if (quat === result) {
           quat.dest[3] = -Math.sqrt((1.0 - x * x - y * y - z * z).abs());
           return quat;
@@ -113,7 +132,7 @@ class Quaternion {
       
       // TODO: Would be faster to return [0,0,0,0] immediately if dot == 0
       
-      if(result == null) result = new Quaternion();
+      if(result == null) result = new Quaternion.zero();
       if (quat === result) {
           quat.dest[0] *= -invDot;
           quat.dest[1] *= -invDot;
@@ -139,7 +158,7 @@ class Quaternion {
    * @returns {quat4} dest if specified, quat otherwise
    */
   static Quaternion Conjugate( Quaternion quat, [Quaternion result]) {
-      if(result == null) result = new Quaternion();
+      if(result == null) result = new Quaternion.zero();
       if (quat === result) {
           quat.dest[0] *= -1;
           quat.dest[1] *= -1;
@@ -176,7 +195,7 @@ class Quaternion {
    * @returns {quat4} dest if specified, quat otherwise
    */
   static Quaternion Normalize( Quaternion quat, [Quaternion result]) {
-      if(result == null) { result = new Quaternion(); }
+      if(result == null) { result = new Quaternion.zero(); }
   
       var x = quat.dest[0], y = quat.dest[1], z = quat.dest[2], w = quat.dest[3],
           len = Math.sqrt(x * x + y * y + z * z + w * w);
@@ -206,7 +225,7 @@ class Quaternion {
    * @returns {quat4} dest if specified, quat otherwise
    */
   static Quaternion Multiply( Quaternion quat, Quaternion quat2, [Quaternion result]) {
-      if(result == null) { result = new Quaternion(); }
+      if(result == null) { result = new Quaternion.zero(); }
   
       var qax = quat.dest[0], qay = quat.dest[1], qaz = quat.dest[2], qaw = quat.dest[3],
           qbx = quat2.dest[0], qby = quat2.dest[1], qbz = quat2.dest[2], qbw = quat2.dest[3];
@@ -219,34 +238,7 @@ class Quaternion {
       return result;
   }
   
-  /**
-   * Transforms a vec3 with the given quaternion
-   *
-   * @param {quat4} quat quat4 to transform the vector with
-   * @param {vec3} vec vec3 to transform
-   * @param {vec3} [dest] vec3 receiving operation result. If not specified result is written to vec
-   *
-   * @returns dest if specified, vec otherwise
-   */
-  static Vector3 MultiplyVec3( Quaternion quat, Vector3 vec, [Vector3 result]) {
-      if(result == null) { result = vec; }
-  
-      var x = vec.dest[0], y = vec.dest[1], z = vec.dest[2],
-          qx = quat.dest[0], qy = quat.dest[1], qz = quat.dest[2], qw = quat.dest[3],
-  
-          // calculate quat * vec
-          ix = qw * x + qy * z - qz * y,
-          iy = qw * y + qz * x - qx * z,
-          iz = qw * z + qx * y - qy * x,
-          iw = -qx * x - qy * y - qz * z;
-  
-      // calculate result * inverse quat
-      result.dest[0] = ix * qw + iw * -qx + iy * -qz - iz * -qy;
-      result.dest[1] = iy * qw + iw * -qy + iz * -qx - ix * -qz;
-      result.dest[2] = iz * qw + iw * -qz + ix * -qy - iy * -qx;
-  
-      return result;
-  }
+
   
   /**
    * Calculates a 3x3 matrix from the given quat4
@@ -298,7 +290,7 @@ class Quaternion {
    * @returns {mat4} dest if specified, a new mat4 otherwise
    */
   static Matrix ToMat4( Quaternion quat, [Matrix result]) {
-      if(result == null) { result = new Matrix(); }
+      if(result == null) { result = new Matrix.zero(); }
   
       var x = quat.dest[0], y = quat.dest[1], z = quat.dest[2], w = quat.dest[3],
           x2 = x + x,
@@ -349,7 +341,7 @@ class Quaternion {
    * @returns {quat4} dest if specified, quat otherwise
    */
   static Quaternion Slerp( Quaternion quat, Quaternion quat2, num slerpVal, [Quaternion result]) {
-      if(result == null) { result = new Quaternion(); }
+      if(result == null) { result = new Quaternion.zero(); }
   
       var cosHalfTheta = quat.dest[0] * quat2.dest[0] + quat.dest[1] * quat2.dest[1] + quat.dest[2] * quat2.dest[2] + quat.dest[3] * quat2.dest[3],
           halfTheta,
@@ -399,4 +391,6 @@ class Quaternion {
    * @returns {string} String representation of quat
    */
   String toString() => '[' + dest[0] + ', ' + dest[1] + ', ' + dest[2] + ', ' + dest[3] + ']';
+  
+  int hashCode() => X.hashCode() + Y.hashCode() + Z.hashCode() + W.hashCode();
 }
